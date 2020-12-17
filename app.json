@@ -3,12 +3,12 @@
     "name": "ReentryScanner",
     "slug": "ReentryScanner",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "landscape",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#00677f"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -17,12 +17,17 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "requireFullScreen": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to scan barcodes for campus entry verification."
+      },
+      "bundleIdentifier": "usahsReentryScanner"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#00677f"
       }
     },
     "web": {
