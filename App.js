@@ -9,7 +9,7 @@ import Moment from 'moment';
 
 export default class BarcodeScanner extends React.Component {
   state = {
-    hasCameraPermission: null, setup: false, scanned: false, access: null, isToday: null, campus: 'Select Campus in Settings'
+    hasCameraPermission: null, setup: true, scanned: false, access: null, isToday: null, campus: null
   };
 
   async componentDidMount() {
@@ -30,23 +30,6 @@ export default class BarcodeScanner extends React.Component {
     return m[month] + ' ' + date + ', ' + year;
   }
 
-  // isToday = ( someDate ) => {
-  //   const today = new Date();
-
-  //   console.log(today);
-  //   var offset = new Date().getTimezoneOffset();
-  //   console.log(offset);
-
-  //   let sd = someDate.split(' ');
-  //   let nd = sd[0].split('-');
-  //   const eM = new Date(sd[0]).getMonth();
-  //   const eY = new Date(sd[0]).getFullYear();
-
-  //   return nd[2] === today.getDate() &&
-  //     eM === today.getMonth() &&
-  //     eY === today.getFullYear();
-  // }
-
   isToday = ( someDate ) => {
     let today = Moment(new Date()).format('YYYY-MM-DD hh:mm:ss');
     let es = someDate.split(' ')[0];
@@ -62,21 +45,32 @@ export default class BarcodeScanner extends React.Component {
   handleBarCodeScanned = ({ data }) => {
     console.log('======= NEW SCAN =======');
     this.setState({ scanned: true });
-    let email, qrcode, date, self = this;
+    let email, qrcode, date, gate, self = this;
+    // console.log({ data }['data']);
+
+    const getUser = axios.get('https://reentryapi.usa.edu/form/'+{ data }['data']);
+    const getGate = axios.get('https://reentryapi.usa.edu/scan/'+{ data }['data']);
 
     setTimeout(() => {
-      axios.get('https://reentryapi.usa.edu/form/'+{ data }['data'], {
-      })
+      axios.all([getUser, getGate])
       .then(function (response) {
-        // console.log(response.data[0]);
-        date = response.data[0].date;
-        qrcode = response.data[0].qrcode;
-        email = response.data[0].email;
+        // console.log(response[0].data[0]);
+        // console.log(response[1].data[0]);
+
+        date = response[0].data[0].date;
+        qrcode = response[0].data[0].qrcode;
+        email = response[0].data[0].email;
+
+        if (response[1].data === 'nodata') {
+          gate = 'Entry'
+        } else {
+          gate = (response[1].data[0].gate === 'Entry') ? 'Exit' : 'Entry';
+        }
 
         // QR code is from today
         if (self.isToday(date)) {
           self.setState({ isToday: true });
-          self.scanSuccess(qrcode, email, self.state.campus);
+          self.scanSuccess(qrcode, email, self.state.campus, gate);
 
           const timer = setTimeout(() => {
             self.setState({ scanned: false, isToday: null });
@@ -89,24 +83,29 @@ export default class BarcodeScanner extends React.Component {
         }
       })
       .catch(function (error) {
-        console.log(error);
+        console.log(error.data);
       });
     }, 50);
   };
 
-  scanSuccess = ( qrcode, email, campus ) => {
+  scanSuccess = ( qrcode, email, campus, gate ) => {
     axios.post('https://reentryapi.usa.edu/scan/create/', {
       qrcode: { qrcode },
       email: { email },
       campus: { campus },
-      barrier: 'entry'
+      gate: { gate }
     })
     .then(function (response) {
-      console.log(response);
+      console.log(response.data);
     })
     .catch(function (error) {
-      console.log(error);
+      console.log(error.data);
     });
+  }
+
+  resetScanner = () => {
+    console.log('======= SCANNER RESET =======');
+    this.setState({ setup: false, scanned: false });
   }
 
   render() {
@@ -132,7 +131,7 @@ export default class BarcodeScanner extends React.Component {
 
         <View style={styles.container}>
           <View style={styles.scannerCont}>
-            {campus != 'Select Campus in Settings' && (
+            {campus && (
               <View style={styles.scanner}>
                 <BarCodeScanner type='front' onBarCodeScanned={ scanned ? undefined : this.handleBarCodeScanned } style={ StyleSheet.absoluteFillObject } />
               </View>
@@ -147,18 +146,39 @@ export default class BarcodeScanner extends React.Component {
           </View>
         </View>
 
-        {/* {setup && ( */}
+        {setup && (
           <View style={styles.message}>
             <View style={[styles.messageInner, styles.setup]}>
-              <Text style={styles.messageText}>SELECT CAMPUS</Text>
-              <Button style={styles.btn} title={'Austin Campus'} onPress={() => this.setState({ setup: false, campus: 'Austin' })} />
-              <Button style={styles.btn} title={'Dallas Campus'} onPress={() => this.setState({ setup: false, campus: 'Dallas' })} />
-              <Button style={styles.btn} title={'Miami Campus'} onPress={() => this.setState({ setup: false, campus: 'Miami' })} />
-              <Button style={styles.btn} title={'San Marcos Campus'} onPress={() => this.setState({ setup: false, campus: 'San Marcos' })} />
-              <Button style={styles.btn} title={'St. Augustine Campus'} onPress={() => this.setState({ setup: false, campus: 'St. Augustine' })} />
+              <Text style={[styles.messageText, styles.paraTextBOLD]}>SELECT CAMPUS</Text>
+
+              <TouchableOpacity style={styles.btn} onPress={() => this.setState({ setup: false, campus: 'Austin' })}>
+                <Text style={[styles.paraTextBOLD, styles.white]}>Austin Campus</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.btn} onPress={() => this.setState({ setup: false, campus: 'Dallas' })}>
+                <Text style={[styles.paraTextBOLD, styles.white]}>Dallas Campus</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.btn} onPress={() => this.setState({ setup: false, campus: 'Miami' })}>
+                <Text style={[styles.paraTextBOLD, styles.white]}>Miami Campus</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.btn} onPress={() => this.setState({ setup: false, campus: 'San Marcos' })}>
+                <Text style={[styles.paraTextBOLD, styles.white]}>San Marcos Campus</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.btn} onPress={() => this.setState({ setup: false, campus: 'St. Augustine' })}>
+                <Text style={[styles.paraTextBOLD, styles.white]}>St. Augustine Campus</Text>
+              </TouchableOpacity>
+
+               <View style={styles.separator} />
+
+              <TouchableOpacity style={styles.reset} onPress={ this.resetScanner }>
+                <Text style={[styles.paraTextBOLD, styles.white]}>RESET SCANNER</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        {/* )} */}
+        )}
 
         {scanned && (isToday === true) && (
           <View style={styles.message}>
@@ -257,7 +277,10 @@ const styles = StyleSheet.create({
     color: '#00677f',
     textTransform: 'none',
   },
-  scanner : {
+  white: {
+    color: '#ffffff'
+  },
+  scanner: {
     width: 400,
     height: 400,
     zIndex: 10000,
@@ -276,12 +299,12 @@ const styles = StyleSheet.create({
     zIndex: 10000,
     height: '100%',
     width: '100%',
-    padding: '20%',
+    padding: '16%',
     backgroundColor: 'rgba(256,256,256,.9)',
   },
   messageInner: {
     height: '100%',
-    padding: '10%',
+    padding: '8%',
     borderRadius: 10,
     flex: 1,
     flexDirection: 'column',
@@ -299,7 +322,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#20da9b'
   },
   setup: {
-    backgroundColor: '#c0c0c0'
+    backgroundColor: '#e3e3e3'
   },
   messageText: {
     color: '#ffffff',
@@ -309,8 +332,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   btn: {
-    backgroundColor: '#ffffff',
-    color: '#000000',
-
+    backgroundColor: '#00677f',
+    padding: '1%',
+    width: '100%',
+    borderRadius: 10,
+  },
+  reset: {
+    backgroundColor: '#d53d25',
+    padding: '1%',
+    width: '100%',
+    borderRadius: 10,
+  },
+  separator: {
+    marginVertical: 8,
   }
 });
