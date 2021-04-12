@@ -176,6 +176,8 @@ export default class BarcodeScanner extends React.Component {
               <TouchableOpacity style={styles.reset} onPress={ this.resetScanner }>
                 <Text style={[styles.paraTextBOLD, styles.white]}>RESET SCANNER</Text>
               </TouchableOpacity>
+
+              <Text style={styles.version}>Ver 2.1.20210412</Text>
             </View>
           </View>
         )}
@@ -345,5 +347,11 @@ const styles = StyleSheet.create({
   },
   separator: {
     marginVertical: 8,
+  },
+  version: {
+    color: '#acacac',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    fontSize: 12
   }
 });
