@@ -5,15 +5,23 @@ import { StyleSheet, Text, View, Image, TouchableOpacity, Button } from 'react-n
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import * as Permissions from 'expo-permissions';
 import axios from 'axios';
-import Moment from 'moment';
+import Moment, { version } from 'moment';
 
 export default class BarcodeScanner extends React.Component {
   state = {
-    hasCameraPermission: null, setup: true, scanned: false, access: null, isToday: null, campus: null
+    v: '2.1.20210413', hasCameraPermission: null, setup: true, scanned: false, access: null, isToday: null, campus: null, date: null, gate: null
   };
 
   async componentDidMount() {
     this.getPermissionsAsync();
+
+    this.dateInterval = setInterval(() => this.setState({ time: this.getCurrentDate() }), 1000);
+    this.scannerInterval = setInterval(() => this.resetScanner(), 1000 * 60 * 15);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.dateInterval);
+    clearInterval(this.scannerInterval);
   }
 
   getPermissionsAsync = async () => {
@@ -21,13 +29,19 @@ export default class BarcodeScanner extends React.Component {
     this.setState({ hasCameraPermission: status === 'granted' });
   }
 
-  getCurrentDate = () => {
+  getCurrentDate = async () => {
+    // console.log('======= DATE/TIME RESET =======');
+
     let date = new Date().getDate();
     let month = new Date().getMonth();
     let year = new Date().getFullYear();
+    let hour = (new Date().getHours() < 10) ? '0' + new Date().getHours() : new Date().getHours();
+    let min = (new Date().getMinutes() < 10) ? '0' + new Date().getMinutes() : new Date().getMinutes();
+    let sec = (new Date().getSeconds() < 10) ? '0' + new Date().getSeconds() : new Date().getSeconds();
     let m = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-    return m[month] + ' ' + date + ', ' + year;
+    this.setState({ date: m[month]+' '+date+', '+year+'  '+hour+':'+min+':'+sec });
+    // return m[month]+' '+date+', '+year+'  '+hour+':'+min;
   }
 
   isToday = ( someDate ) => {
@@ -62,10 +76,12 @@ export default class BarcodeScanner extends React.Component {
         email = response[0].data[0].email;
 
         if (response[1].data === 'nodata') {
-          gate = 'Entry'
+          gate = 'Entry';
         } else {
           gate = (response[1].data[0].gate === 'Entry') ? 'Exit' : 'Entry';
         }
+
+        self.setState({ gate: gate });
 
         // QR code is from today
         if (self.isToday(date)) {
@@ -109,7 +125,7 @@ export default class BarcodeScanner extends React.Component {
   }
 
   render() {
-    const { hasCameraPermission, setup, scanned, isToday, campus } = this.state;
+    const { hasCameraPermission, setup, scanned, gate, isToday, campus, date, v } = this.state;
 
     if (hasCameraPermission === null) {
       return <><View style={styles.container}><Text>Requesting for camera permission</Text></View></>;
@@ -142,7 +158,7 @@ export default class BarcodeScanner extends React.Component {
             <Text style={styles.titleText}>USAHS Health Screening</Text>
             <Text style={styles.paraText}>Scan your QR Code you recieved from the Reentry Form for today. If you did not get a QR Code, please visit <Text style={styles.teal}>https://reenty.usa.edu</Text> and fill out the questionaire.</Text>
             <Text style={styles.paraTextBOLD}>Campus:{"\n"} <Text style={styles.teal}>{ campus }</Text></Text>
-            <Text style={styles.paraTextBOLD}>Today is:{"\n"} <Text style={styles.teal}>{ this.getCurrentDate() }</Text></Text>
+            <Text style={styles.paraTextBOLD}>Today is:{"\n"} <Text style={styles.teal}>{ date }</Text></Text>
           </View>
         </View>
 
@@ -177,17 +193,27 @@ export default class BarcodeScanner extends React.Component {
                 <Text style={[styles.paraTextBOLD, styles.white]}>RESET SCANNER</Text>
               </TouchableOpacity>
 
-              <Text style={styles.version}>Ver 2.1.20210412</Text>
+              <Text style={styles.version}>Ver { v }</Text>
             </View>
           </View>
         )}
 
-        {scanned && (isToday === true) && (
+        {scanned && (isToday === true) && (gate === 'Entry') && (
           <View style={styles.message}>
             <View style={[styles.messageInner, styles.pass]}>
               <Image source={require('./assets/success.png')} style={styles.successImg} />
-              <Text style={styles.messageText}>Access Granted</Text>
-              <Text style={styles.messageText}>Have a Great Day and remember to scan out when leaving campus.</Text>
+                <Text style={styles.messageText}>Access Granted</Text>
+                <Text style={styles.messageText}>Have a Great Day and remember to scan out when leaving campus.</Text>
+            </View>
+          </View>
+        )}
+
+        {scanned && (isToday === true) && (gate === 'Exit') && (
+          <View style={styles.message}>
+            <View style={[styles.messageInner, styles.pass]}>
+              <Image source={require('./assets/success.png')} style={styles.successImg} />
+                <Text style={styles.messageText}>Exit Message</Text>
+                <Text style={styles.messageText}>Bye, Bye, Bye!</Text>
             </View>
           </View>
         )}
