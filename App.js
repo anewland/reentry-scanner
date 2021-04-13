@@ -9,7 +9,7 @@ import Moment, { version } from 'moment';
 
 export default class BarcodeScanner extends React.Component {
   state = {
-    v: '2.1.20210413', hasCameraPermission: null, setup: true, scanned: false, access: null, isToday: null, campus: null, date: null, gate: null
+    v: '2.1.20210414', hasCameraPermission: null, setup: true, scanned: false, access: null, isToday: null, campus: null, date: null, gate: null
   };
 
   async componentDidMount() {
