@@ -2,7 +2,7 @@
   "expo": {
     "name": "USAHS Reentry",
     "slug": "USAHSReentry",
-    "version": "1.0.0",
+    "version": "2.1.20210413",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
     "splash": {

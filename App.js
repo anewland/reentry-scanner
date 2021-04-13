@@ -212,8 +212,8 @@ export default class BarcodeScanner extends React.Component {
           <View style={styles.message}>
             <View style={[styles.messageInner, styles.pass]}>
               <Image source={require('./assets/success.png')} style={styles.successImg} />
-                <Text style={styles.messageText}>Exit Message</Text>
-                <Text style={styles.messageText}>Bye, Bye, Bye!</Text>
+                <Text style={styles.messageText}>Exit Scan Accepted</Text>
+                <Text style={styles.messageText}>Have a Great Day.</Text>
             </View>
           </View>
         )}
