@@ -35,12 +35,14 @@ export default class BarcodeScanner extends React.Component {
     let date = new Date().getDate();
     let month = new Date().getMonth();
     let year = new Date().getFullYear();
-    let hour = (new Date().getHours() < 10) ? '0' + new Date().getHours() : new Date().getHours();
+    let tod = (new Date().getHours() > 12) ? 'PM' : 'AM';
+    let chour = (new Date().getHours() > 12) ? new Date().getHours() - 12 : new Date().getHours();
+    let hour = (chour < 10) ? '0' + chour : chour;
     let min = (new Date().getMinutes() < 10) ? '0' + new Date().getMinutes() : new Date().getMinutes();
     let sec = (new Date().getSeconds() < 10) ? '0' + new Date().getSeconds() : new Date().getSeconds();
     let m = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-    this.setState({ date: m[month]+' '+date+', '+year+'  '+hour+':'+min+':'+sec });
+    this.setState({ date: m[month]+' '+date+', '+year+'  '+hour+':'+min+':'+sec+' '+tod });
     // return m[month]+' '+date+', '+year+'  '+hour+':'+min;
   }
 
