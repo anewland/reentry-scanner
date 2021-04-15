@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
+import { Platform } from 'react-native';
 // import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity, Button } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
@@ -9,7 +10,7 @@ import Moment, { version } from 'moment';
 
 export default class BarcodeScanner extends React.Component {
   state = {
-    v: '2.1.20210414', hasCameraPermission: null, setup: true, scanned: false, access: null, isToday: null, campus: null, date: null, gate: null
+    v: '2.2.20210415', hasCameraPermission: null, setup: true, scanned: false, access: null, isToday: null, campus: null, date: null, gate: null
   };
 
   async componentDidMount() {
@@ -35,7 +36,7 @@ export default class BarcodeScanner extends React.Component {
     let date = new Date().getDate();
     let month = new Date().getMonth();
     let year = new Date().getFullYear();
-    let tod = (new Date().getHours() > 12) ? 'PM' : 'AM';
+    let tod = (new Date().getHours() >= 12) ? 'PM' : 'AM';
     let chour = (new Date().getHours() > 12) ? new Date().getHours() - 12 : new Date().getHours();
     let hour = (chour < 10) ? '0' + chour : chour;
     let min = (new Date().getMinutes() < 10) ? '0' + new Date().getMinutes() : new Date().getMinutes();
@@ -134,6 +135,16 @@ export default class BarcodeScanner extends React.Component {
     }
     if (hasCameraPermission === false) {
       return <><View style={styles.container}><Text>No access to camera</Text></View></>;
+    }
+
+    if (Platform.isPad === false) {
+      return (
+        <>
+          <View style={styles.phone}>
+            <Image source={require('./assets/usa-logo.png')} style={styles.plogo} />
+          </View>
+        </>
+      );
     }
 
     return (
@@ -381,5 +392,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'uppercase',
     fontSize: 12
+  },
+  phone: {
+    flex: 1,
+    padding: 0,
+    margin: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#00677f',
   }
 });
